@@ -1,0 +1,147 @@
+常用的MySQL命令大全
+1.连接MySQL
+	1.格式： mysql -h主机地址 -u用户名 －p(回车)用户密码
+	2.退出MYSQL命令： exit;（回车）
+	
+2.修改密码
+	1.格式：mysqladmin -u用户名 -p旧密码 password 新密码
+	2.给root加个密码ab12:mysqladmin -u root -password ab12
+	3.再将root的密码改为djg345: mysqladmin -uroot -pab12 password djg345
+	
+3.增加用户(需进入mysql中添加):
+	1.格式：grant select on 数据库.* to 用户名@登录主机 identified by “密码”
+	  grant select,insert,update,delete on *.* to dujin@localhost identified by "du5854960";
+	2.删除授权：
+	  mysql> revoke all privileges on *.* from chen@localhost;   //删除chen用户的所有操作权限
+	  mysql> delete from user where user="chen" and host="localhost";   //从user表中删除chen用户
+	  mysql> flush privileges;   //刷新数据库
+	  
+	3.修改mysql中root的密码：
+		shell>mysql -u root -p
+		mysql> update user set password=password(”xueok654123″) where user=’root’;
+		mysql> flush privileges //刷新数据库
+		mysql>show databases; 显示所有数据库
+		mysql>use dbname； 选择数据库：
+		mysql>show tables; 显示数据库mysql中所有的表：需先use dbname;
+		mysql>describe user; 显示表mysql数据库中user表的列信息；
+	  
+4.进入MySQL后的常用操作命令:
+	show databases;  显示所有的数据库
+	create database dbname; 创建数据库
+	drop database dbname; 删除数据库
+	use databasename; 选择数据库
+	drop database name 直接删除数据库，不提醒
+	show tables; 显示所有表
+	describe tablename; 表的详细描述  = SHOW COLUMNS FROM tablename;
+	select 中加上distinct去除重复字段
+	mysqladmin drop database name 删除数据库前，有提示。
+	select version(),current_date; 显示当前mysql版本和当前日期
+	alter table t1 rename to t2; 重命名表
+	SHOW COLUMNS FROM tablename; 查看表结构的变化
+	show variables like "%char%"; 查看默认的编码格式
+	show variables like 'character_set_database'; 查看当前数据库编码
+	SET NAMES utf8; 设置客户端的显示的编码格式
+	alter database test CHARACTER SET utf8; 修改test数据库的编码
+	show create database test; 查看创建test数据库时的命令
+	show create table test1; 查看创建test1表的命令
+	SHOW INDEX FROM table_name\G;   显示索引信息
+	alter table user1 DEFAULT CHARACTER SET utf8; 修改已有数据表的默认编码
+	
+5.MySQL中SELECT命令：
+	1.显示MYSQL的版本:mysql> select version(); 
+	2.显示当前时间:mysql> select now();
+	3.显示年月日:mysql> select current_date;
+	4.显示字符串:mysql> select "welecome to my blog!"; 
+	5.当计算器用:mysql> select ((4 * 4) / 10 ) + 25; 
+	
+6.数据表操作:
+	1.创建数据表:  格式：CREATE TABLE table_name (column_name column_type);
+	例如，建立一个名为user的表：
+		mysql> create table user(
+			id int(4) not null auto_increment,   //AUTO_INCREMENT定义列为自增的属性，一般用于主键，数值会自动加1。
+			name char(20) not null,
+			sex int(4) not null default '0',
+			degree double(16,2),
+			PRIMARY KEY ( id ));    //PRIMARY KEY关键字用于定义列为主键。 您可以使用多列来定义主键，列间以逗号分隔
+			
+	2.删除数据表:  格式：DROP TABLE table_name ;
+	
+	3.表插入数据： 格式：INSERT INTO table_name ( field1, field2,...fieldN )
+												VALUES
+												( value1, value2,...valueN );
+				如果数据是字符型，必须使用单引号或者双引号，如："value"。
+				
+	4.查询表中的数据： 格式：SELECT column_name,column_name FROM table_name [WHERE Clause] [OFFSET M ][LIMIT N];
+	
+	5.删除表中数据： 格式：DELETE FROM table_name [WHERE Clause];  //如果没有指定 WHERE 子句，MySQL表中的所有记录将被删除。
+	
+	6.修改表中数据:  格式：UPDATE table_name SET field1=new-value1, field2=new-value2 [WHERE Clause];  //你可以同时更新一个或多个字段。
+	
+	7.ALTER命令：
+		1.增加字段:  格式：ALTER TABLE table_name ADD field_name field_type [FIRST/AFTER field_name];  //可以指定新增字段的位置
+		2.删除字段： 格式：ALTER TABLE table_name DROP field_name;
+		3.修改字段类型及名称: 格式：ALTER TABLE table_name MODIFY field_name field_type;  //MODIFY 修改原有字段的字段类型属性
+		                      格式：ALTER TABLE table_name CHANGE old_field_name new_field_name field_type;  //CHANGE 修改字段的字段名及类型属性
+		4.修改字段默认值:  ALTER TABLE table_name ALTER field_name SET DEFAULT 1000;  //修改字段的默认值为1000
+		                   ALTER TABLE table_name ALTER field_name DROP DEFAULT;  //删除字段的默认值
+	    5.修改表名：ALTER TABLE table_name1 RENAME TO table_name2;  
+		6.加索引：alter table 表名 add index 索引名 (字段名1[，字段名2 …]);
+		7.加主关键字的索引：alter table 表名 add primary key (字段名);
+		8.加唯一限制条件的索引：alter table 表名 add unique 索引名 (字段名);
+		9.删除某个索引：alter table 表名 drop index 索引名;
+		
+	8.复制表操作：
+	    CREATE TABLE newadmin LIKE admin;         //拷贝表结构到新表newadmin中,不会拷贝表中的数据
+		INSERT INTO newadmin SELECT * FROM admin; //拷贝数据到新表中
+		
+7.导入导出数据(数据备份)：
+	1.导出数据库用mysqldump命令（注意mysql的安装路径，即此命令的路径）：
+		1.导出整个数据库(数据和表结构,备份数据库)：
+		mysqldump -u用户名 -p密码 数据库名 > 数据库名.sql
+		#/usr/local/mysql/bin/   mysqldump -uroot -p abc > abc.sql
+		敲回车后会提示输入密码
+		
+		2.导出数据库中所有的表的表结构:
+		mysqldump -u用户名 -p密码 -d 数据库名 > 数据库名.sql
+		#/usr/local/mysql/bin/   mysqldump -uroot -p -d abc > abc.sql
+		敲回车后会提示输入密码
+		
+		3.导出数据库中的一个表(数据和表结构):
+		mysqldump -u 用户名 -p 数据库名 表名> 导出的文件名
+		#/usr/local/mysql/bin/   mysqldump -u root -p dbname users> dbname_users.sql
+		敲回车后会提示输入密码
+		
+		4.导出数据库中的一个表的表结构:
+		mysqldump -u 用户名 -p -d 数据库名 表名> 导出的文件名
+		#/usr/local/mysql/bin/   mysqldump -u root -p -d dbname users> dbname_users.sql
+		敲回车后会提示输入密码
+
+		注：/usr/local/mysql/bin/  --->  mysql的data目录
+		    -d  表示没有数据(不导出数据)
+
+
+	2.导入数据库
+		1、首先建空数据库
+		mysql>create database abc;
+
+		2、导入数据库
+		方法一：
+		（1）选择数据库
+		mysql>use abc;
+		（2）设置数据库编码
+		mysql>set names utf8;
+		（3）导入数据（注意sql文件的路径）
+		mysql>source /home/abc/abc.sql;
+		方法二：
+		mysql -u用户名 -p密码 数据库名 < 数据库名.sql
+		#mysql -uroot -p abc < abc.sql
+		敲回车后会提示输入密码
+
+	
+
+		
+
+		
+		
+		
+		
