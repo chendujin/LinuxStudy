@@ -1,0 +1,44 @@
+1.vim /etc/init.d/nginx
+	#!/bin/bash
+	#
+	# chkconfig: - 85 15
+	# description: Nginx is a World Wide Web server.
+	# processname: nginx
+
+	nginx=/usr/local/nginx1.10/sbin/nginx
+	conf=/usr/local/nginx1.10/conf/nginx.conf
+	case $1 in
+	start)
+	echo -n "Starting Nginx"
+	$nginx -c $conf
+	echo " Success"
+	;;
+	stop)
+	echo -n "Stopping Nginx"
+	killall -9 nginx
+	echo " It'stop"
+	;;
+	test)
+	$nginx -t -c $conf
+	;;
+	reload)
+	echo -n "Reloading Nginx"
+	ps auxww | grep nginx | grep master | awk '{print $2}' | xargs kill -HUP
+	echo " It's reload"
+	;;
+	restart)
+	$0 stop
+	$0 start
+	;;
+	show)
+	ps -aux|grep nginx
+	;;
+	*)
+	echo -n "Usage: $0 {start|restart|reload|stop|test|show}"
+	;;
+	esac
+	
+2.授予该脚本可执行权限：chmod +x /etc/init.d/nginx 
+
+3.启动nginx：service nginx start或/etc/init.d/nginx start或systemctl start nginx.service
+
