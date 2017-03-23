@@ -1,0 +1,36 @@
+1.常见的SQL语句类型
+	DDL：数据定义语言 --- CREATE、ALTER、DROP、TRUNCATE 
+	TPL：事务处理语言 --- COMMIT、ROLLBACK、SAVEPOINT、SET TRANSACTION
+	DCL：数据控制语言 --- GRANT、REVOKE
+	DML：数据操作语言 --- SELECT、UPDATE、INSERT、DELETE
+	
+2.正确使用SQL的优势
+	1.增加数据库处理效率，减少应用相应时间。
+	2.减少数据库服务器负载，增加服务器稳定性。
+	3.减少服务器间通讯的网络流量。
+	
+3.join从句的使用
+    John从句得类型：
+	（1）内链接（ INNER ）
+	（2）全外连接（ FULL OUTER ）
+	（3）左外连接（ LEFT OUTER ）
+	（4）右外连接（ RIGHT OUTER ）
+	（5）交叉链接（ CROSS ）
+	1.inner join(内连接): 基于连接谓词将两张表（如A和B）的列组合在一起，产生新的结果表(内连接主要是用来取两个表中交集部分)。
+		1.等值连接: 指使用等号"="比较两个表的连接列的值，相当于两表执行笛卡尔后，取两表连结列值相等的记录。
+			语法格式：SELECT 列 FROM 表1 INNER JOIN 表2 ON 表1.列 = 表2.列 
+			select a.user_name,a.over,b.over from user1 a join user2 b on a.user_name=b.user_name;
+			
+		2.非等值连接: 指使用大于号">"或小于号"<"比较两个表的连接列的值，相当于两表执行笛卡尔后，取一个表大于或小于另一个表的连结列值的记录。
+			语法格式：SELECT 列 FROM 表1 INNER JOIN 表2 ON 表1.列 <或> 表2.列 
+			
+	2.左外连接(LEFT OUTER JOIN): 指将左表的所有记录与右表符合条件的记录，返回的结果除内连接的结果，还有左表不符合条件的记录，并在右表相应列中填NULL
+	
+	3.右外连接(RIGHT OUTER JOIN): 			与左外连接相反，指将右表的所有记录与左表符合条件的记录，返回的结果除内连接的结果，还有右表不符合条件的记录，并在左表相应列中填NULL。
+	
+	4.全外连接（FULL JOIN）——MySQL不支持: 指将左表所有记录与右表所有记录进行连接，返回的结果除内连接的结果，还有左表与右表不符合条件的记录，并在左表与右表相应列中填NULL。
+	
+	
+	
+	
+	  
