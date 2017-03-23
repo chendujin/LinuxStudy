@@ -1,0 +1,125 @@
+CentOS7下安装FTP服务
+
+1.安装vsftp
+	1.查询是否已经安装vsftp服务: rpm -qa | grep vsftpd 
+	
+	2.安装vsftp：yum -y install vsftpd
+	
+	3.修改配置文件
+		vi /etc/vsftpd/vsftpd.conf
+			保证下面3项为YES
+			anonymous_enable=YES		#开启匿名登录功能
+			anon_upload_enable=YES
+			anon_mkdir_write_enable=YES
+			
+	4.设置vsftpd开机启动
+		systemctl enable vsftpd.servic
+		
+	5.启动并查看vsftpd服务状态，systemctl启动服务成功不会有任何提示，绿色的active表示服务正在运行
+		systemctl start vsftpd.service
+		systemctl status vsftpd.service
+		
+2.本地验证ftp是否可以正常访问
+	1.安装ftp
+		yum -y install ftp
+		
+	2.使用anonymous登陆，无需密码
+		ftp localhost
+			220表示服务正常，可以登陆；230表示登陆成功
+			
+	3.查看FTP服务器文件夹信息
+		ls
+		
+3.外部证ftp是否可以正常访问
+	1.关闭防火墙
+		systemctl stop firewalld.service
+		为防止机器重启后防火墙服务重新开启，可将防火墙服务永久关闭。
+		systemctl disable firewalld.service
+		
+	2.在window上输入ftp://IP地址，可看到ftp下的目录（pub为系统预设的）
+	
+4.文件读写
+	到上面为止，我们发现ftp目录下并不能读写文件，这是由文件夹权限和selinux引起的。
+	1.设置文件夹权限，将pub文件夹的权限设置为777
+		chmod 777 -R /var/ftp/pub
+		
+	2.关闭selinux服务
+		vi /etc/selinux/config
+		将SELINUX=enforcing改为：SELINUX=disabled
+		
+	3.重启服务
+		systemctl restart vsftpd.service
+		
+	4.在windows上上传文件
+	
+5.配置用户权限
+	1.创建用户
+		useradd -d /home/ftp  test //增加用户test，并制定test用户的主目录为/home/ftp
+		passwd test //为test设置密码
+		
+	2.更改用户相应的权限设置：(对于一般情况，简单添加一个用户的话，这一步，可以不要！！一般情况下，配置ftp也不需要这一步）
+		usermod -s /sbin/nologin test //限定用户test不能telnet，只能ftp
+		usermod -s /bin/bash   test //用户test恢复正常
+		usermod -d /test test //更改用户test的主目录为/test
+		
+	3.修改/etc/vsftpd/vsftpd.conf文件如下：
+		vim /etc/vsftpd/vsftpd.conf
+			anonymous_enable=NO   #禁止匿名登录
+			local_enable=YES      #本地登录
+			write_enable=YES      #允许写
+			
+			userlist_enable=YES   
+			userlist_deny=NO
+			userlist_file=/etc/vsftpd/user_list
+			#如果userlist_deny=NO：只允许userlist_file文件中的用户可访问ftp；如果userlist_deny=YES：userlist_file文件中列举的用户不能通过ftp访问系统。userlist_enable是该功能的开关
+			
+			把用户加入到/etc/vsftpd/user_list文件中，每个用户一行，编辑 /etc/vsftpd/user_list文件，将受限制的用户添加进去，每个用户名一行
+				添加后如下：
+						 test
+						 
+			限制用户只能访问/home/ftp，不能访问其他路径
+				修改/etc/vsftpd/vsftpd.conf如下： 
+				chroot_list_enable=YES //限制访问自身目录
+				# (default follows)
+				chroot_list_file=/etc/vsftpd/chroot_list
+				
+				编辑/etc/vsftpd/chroot_list文件，将受限制的用户添加进去，每个用户名一行
+				添加后如下：
+						   test     /home/ftp
+						   
+	4.改完配置文件，不要忘记重启vsFTPd服务器
+		systemctl restart vsftpd.service
+		
+6.如果需要允许用户修改密码，但是又没有telnet登录系统的权限：(对于一般情况，简单添加一个用户的话，这一步，可以不要！！一般情况下，配置ftp也不需要这一步）
+	usermod -s /usr/bin/passwd test //用户telnet后将直接进入改密界面
+						 
+			
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
