@@ -1,0 +1,74 @@
+1.约束及修改数据表
+	约束
+	1.约束分为表级约束和列级约束
+		针对一个字段的约束为列级约束，针对两个及两个以上的约束为表级约束
+	2.约束保证数据的完整性和一致性
+	3.约束类型包括：
+		NOT NULL(非空约束）
+		PRIMARY KEY（主键约束）
+		UNIQUE(唯一约束)
+		DEFAULT(默认约束)
+		FOREIGN KEY(外键约束)
+
+2.外键约束的要求(FOREIGN KEY)：
+	1.父表和子表必须使用相同的存储引擎，而且禁止使用临时表
+	2.数据表的存储引擎只能为InnoDB
+	3.外键列和参照列必须具有相似的数据类型。其中数字的长度或是否有符号位必须相同，而字符的长度则可以不同.外键列：加过FOREIGN KEY关键词的列。而外键列参照的那一列称为参照列。
+		使用：FOREIGN KEY (子表列名) REFERENCES 父表名（父表列名）;
+	4.外键列和参照列必须创建索引，如果外键列不存在索引的话，MySQL将自动创建索引。
+	
+3.外键约束的参照操作
+	CASCADE:从父表删除或更新会自动删除或更新子表中匹配的行
+	SET NULL:从父表删除或更新行，并设置子表中的外键列为NULL。如果使用该选项，必须保证子表列没有指定NOT NULL
+	RESTRICT：拒绝对父表的删除或更新操作
+	NO ACTION：标准SQL的关键字，在MySQL中与RESTRICT相同
+	
+4.修改数据表-添加、删除列
+	添加单列示例：ALTER TABLE users1(表名称) ADD password(要添加的列的名称) VARCHAR(32) NOT NULL AFTER username(添加到username列的后面); //添加到某数据库的某个数据表的某个列后
+	添加多列：ALTER TABLE tbl_name ADD (col_name column_definition,...);
+	删除列：ALTER TABLE tbl_name(表名称) DROP col_name(列名称);
+	展示表中的列：SHOW COLUMNS FROM users1(表名称);
+	删除多列示例：ALTER TABLE users1(表名称) DROP password(列名称),DROP age(列名称);
+	
+	创建完表后往表中添加列：
+	ALTER TABLE user2 ADD id SMALLINT UNSIGNED PRIMARY KEY;
+	为列添加主键约束：
+	ALTER TABLE user2 ADD PRINMARY KEY (id);
+	为列添加唯一约束：
+	ALTER TABLE user2 ADD UNIQUE (username);
+	为列添加外键约束：
+	ALTER TABLE user2 ADD FOREIGN KEY (pid) REFERENCES province (id);
+	为列添加默认约束：
+	ALTER TABLE use2 ALTER age SET DEFAULT 20;
+	删除默认约束：
+	ALTER TABLE user2 ALTER age DROP DEFAULT;
+	删除表中的某一字段：
+	ALTER TABLE t3 DROP username;
+	
+	删除主键约束
+	ALTER TABLE usern DROP  PRIMARY KEY;
+	删除唯一约束
+	ALTER TABLE user DROP {INDEX | KEY} index;
+	删除外键约束
+	ALTER TABLE user DROP FOREIGN KEY fk_name;
+	
+	修改列定义MODIFY ：ALTER TABLE users2 MODIFY id SMALLINT UNSIGNED NOT NULL FIRST;//修改id字段的数据类型和在表users2中所处的位置
+	修改列名称：ALTER TABLE users2 CHANGE pid(旧的字段名称) p_id(新的字段名称) TINYINT UNSIGNED NOT NULL;//修改pid字段，改为p_id字段
+	数据表更名：ALTER TABLE users2 RENAME users3;//把表名users2改为新的users3
+
+	--------------------------------------
+
+	1、大的数据类型改变成小的数据类型，有可能造成数据丢失。
+	2、修改列的定义，可以使用modify：alter table tbname modify column column_definition;或者使用change来替代modify
+	3、change 不仅可以改列定义，还可以改列名称：alter table tbname change column new_column column_definition
+	4、修改表名有两种方法：alter table tbname rename to new_tbname和rename table tbname to new_tbname
+	
+5.insert 插入语句的三种方法
+	第一种:
+	insert tb_name [column_name]values(...)[,(...),(....)];--比较常用，可以一次性插入多条记录，并且可以输入表达式甚至是函数，但是无法进行子查询。
+	第二种：
+	insert tb_name set column_name={exprdefault};--可以进行子查询，但是只能插入一条记录的多个字段,但一次只能插入一条记录(INSERT [INTO] 表名 SET 列名1=列值1, 列名2=列值2,...;)。
+	第三种：
+	insert table_name [(colname...)] select语句.....--这种方法就是把查询到的一个表结果插入到另一个指定数据表中。
+	
+	
