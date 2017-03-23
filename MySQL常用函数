@@ -1,0 +1,90 @@
+1.数学函数
+	主要用于处理数字，包括整型、浮点数等。
+	select ABS(X):返回X的绝对值
+	select MOD(N,M)或%:N除以M取余
+	select FLOOR(X):返回不大于X的最大整数值
+	select CEILING(X):返回不小于X的最小整数值
+	select ROUND(X) :返回参数X的四舍五入的一个整数
+	
+2.字符串函数
+	select ASCII(str):返回字符串str的最左面字符的ASCII代码值。如果str是空字符串，返回0。如果str是NULL，返回NULL。
+	select CONCAT(str1,str2,...):返回来自于参数连结的字符串。如果任何参数是NULL，返回NULL。可以有超过2个的参数。一个数字参数被变换为等价的字符串形式。
+	select LENGTH(str):返回字符串str的长度.
+	select LOCATE(substr,str):返回子串substr在字符串str第一个出现的位置，如果substr不是在str里面，返回0.
+	select INSERT(str,pos,len,newstr):返回字符串str，在位置pos起始的子串且len个字符长的子串由字符串newstr代替。
+	select LEFT(str,len):返回字符串str的最左面len个字符。
+	select RIGHT(str,len):返回字符串str的最右面len个字符。
+	select SUBSTRING(str,pos):从字符串str的起始位置pos返回一个子串。
+	select TRIM(str):返回字符串str，所有前缀或后缀被删除了。
+	select LTRIM(str):返回删除了其前置空格字符的字符串str。
+	select RTRIM(str):返回删除了其拖后空格字符的字符串str。
+	select REPLACE(str,from_str,to_str):从str中匹配from_str字符串并用to_str代替,返回替换后的字符串.
+	select REPEAT(str,count):返回由重复count次的字符串str组成的一个字符串.如果count<=0,返回一个空字符串.如果str或count是NULL.返回NULL。
+	select REVERSE(str):返回颠倒字符顺序的字符串str。
+	
+3.日期和时间函数
+	select DAYOFWEEK(date):返回日期date的星期索引(1=星期天，2=星期一, …7=星期六)。
+	select WEEKDAY(date):返回date的星期索引(0=星期一，1=星期二, ……6= 星期天)。
+	select DAYOFMONTH(date):返回date的月份中的日期，在1到31范围内。
+	select DAYOFYEAR(date):返回date在一年中的日数, 在1到366范围内。
+	select MONTH(date):返回date的月份，范围1到12。
+	select DAYNAME(date):返回date的星期名字。
+	select MONTHNAME(date) :返回date的月份名字。
+	select QUARTER(date):返回date一年中的季度，范围1到4。
+	select WEEK(date,first):对于星期天是一周的第一天的地方，有一个单个参数，返回date的周数，范围在0到52。2个参数形式WEEK()允许你指定星期是否开始于星期天或星期一。如果第二个参数是0，星期从星期天开始，如果第二个参数是1，从星期一开始。
+	select YEAR(date):返回date的年份，范围在1000到9999。
+	select HOUR(time):返回time的小时，范围是0到23。
+	select MINUTE(time):返回time的分钟，范围是0到59。
+	select SECOND(time):回来time的秒数，范围是0到59。
+	
+4.控制流程函数
+	IF(expr1,expr2,expr3):如果 expr1 是TRUE (expr1 <> 0 and expr1 <> NULL)，则 IF()的返回值为expr2; 否则返回值则为 expr3。IF() 	的返回值为数字值或字符串值，具体情况视其所在语境而定。
+	
+	Strcmp(str1,str2):如果str1>str2返回1,str1<str2返回-1,str1=str2反回0.
+	
+5.系统信息函数
+	select VERSION()函数返回数据库的版本号
+	select CONNECTION_ID()函数返回服务器的连接数，也就是到现在为止MySQL服务的连接次数
+	select DATABASE()和SCHEMA()返回当前数据库名
+	select USER()、SYSTEM_USER()、SESSION_USER()、CURRENT_USER()和CURRENT_USER这几个函数可以返回当前用户的名称
+	select CHARSET(str)函数返回字符串str的字符集，一般情况这个字符集就是系统的默认字符集
+	select COLLATION(str)函数返回字符串str的字符排列方式
+	select LAST_INSERT_ID()函数返回最后生成的AUTO_INCREMENT值
+	
+6.加密函数
+	select PASSWORD(str)函数可以对字符串str进行加密。一般情况下，PASSWORD(str)函数主要是用来给用户的密码加密的
+	select MD5(str)函数可以对字符串str进行加密。MD5(str)函数主要对普通的数据进行加密
+	select ENCODE(str,pswd_str)函数可以使用字符串pswd_str来加密字符串str。加密的结果是一个二进制数，必须使用BLOB类型的字段来保存它
+	select DECODE(crypt_str,pswd_str)函数可以使用字符串pswd_str来为crypt_str解密。crypt_str是通过ENCODE(str,pswd_str)加密后的二进制数据,字符串pswd_str应该与加密时的字符串pswd_str是相同的.
+	
+7.其它函数
+	select FORMAT(x,n)函数可以将数字x进行格式化，将x保留到小数点后n位。这个过程需要进行四舍五入。
+	
+	select ASCII(s)返回字符串s的第一个字符的ASCII码；BIN(x)返回x的二进制编码；HEX(x)返回x的十六进制编码；OCT(x)返回x的八进制编码；CONV(x,f1,f2)将x从f1进制数变成f2进制数
+	
+	select INET_ATON(IP)函数可以将IP地址转换为数字表示；INET_NTOA(n)函数可以将数字n转换成IP的形式。其中，INET_ATON(IP)函数中IP值需要加上引号。这两个函数互为反函数。
+	
+	select BENCHMARK(count,expr)函数将表达式expr重复执行count次，然后返回执行时间。该函数可以用来判断MySQL处理表达式的速度。
+	
+	select CONVERT(s USING cs)函数将字符串s的字符集变成cs
+	
+	CAST(x AS type)和CONVERT(x,type)这两个函数将x变成type类型。这两个函数只对BINARY、CHAR、DATE、DATETIME、TIME、SIGNED INTEGER、UNSIGNED INTEGER这些类型起作用。但两种方法只是改变了输出值的数据类型，并没有改变表中字段的类型。
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
