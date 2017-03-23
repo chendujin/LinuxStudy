@@ -1,0 +1,74 @@
+一.yii框架的基本使用方法：
+1.创建数据模型：（basic/models）
+①，和表名一致的文件；
+②，引入命名空间：namespace app\models;
+③, 使用命名空间:use yii\db\ActiveRecord;
+④, 创建与表名一致的类并继承ActiveRecord;
+class tablename extends ActiveRecord{}
+
+2.数据模型之单表查询
+
+  查询数据：
+    ①：原生sql语句查询（支持查询条件使用占位符，过滤用户提交的数据）
+	   $sql = 'select * from test where id=:id';
+	   $results = Test::findBySql($sql,array(':id'=>'1 or 1=1'))->all();  //返回的是一个对象
+	   
+	②：封装的查询语句
+	   //id=1
+	   $results = Test::find()->where(['id'=>1])->all();  //返回的是一个对象
+	   
+	   //id>0
+	   $results = Test::find()->where(['>','id',0])->all();  //返回的是一个对象
+	   
+	   //id>=1 并且 id<=2
+	   $results = Test::find()->where(['between','id',1,2])->all();  //返回的是一个对象
+	   
+	   //title like "%title123%"
+	   $results = Test::find()->where(['like','title','title123'])->all();  //返回的是一个对象
+	   
+	③：查询结果转化为数组：asArray()
+	   $results = Test::find()->where(['between','id',1,2])->asArray()->all();   //返回的数据由对象变为(二维)数组
+	   
+	④：批量查询，foreach循环，一次查询2个记录
+	   foreach(Test::find()->batch(2) as $tests){}   //通过Model::find()->batch(10),可以每次循环取10条，功能类似于文件读取中的管道读取，一次只加载部分到内存，这样可以节省内存，避免浪费（一次载入所有到内存然后慢慢处理，是会占用较多内存的）
+	   
+3.数据模型之单表删除数据
+
+  //先取出数据，然后再删除
+  $result = tableName::find()->where(['id'=>1])->all();
+  $result[0]->delete(); //delete() 是对象 里面的方法 可以直接使用
+  
+  tableName::deleteAll(); //不传参数 ，删除所有数据 ，传参数 按条件删除
+  tableName::deleteAll('id>:id',array(':id'=>1)); //按照传递条件删除
+  
+4.数据模型之单表添加数据
+
+  //在数据表模型中添加 rules() 方法，利用验证器组件  对添加字段的内容进行验证。在action 中给字段赋值之后，调用validate()验证添加的规则;    以及hasErrors()判断是否出现错误
+  
+  ①：数据表模型添加rules()方法利用验证器规则验证数据的可靠性
+     public function rules(){
+	    
+		return [
+		  ['id','iteger'],
+		  ['title','string','length'=>[0,5]]
+		];
+	 
+	 }
+	 
+	②：添加数据
+	    $test = new test ();//实例化一个对象调用一个save方法 可以把数据保存到表中 
+		$test->id = 1;          //id是表test 中的字段，直接添加字段所对应的值
+		$test->title = 'title3';//title是表test中的字段 注意：要把表中所有字段赋值才能保存成功
+		$test->validate();//在test model 中 定义rules 方法 规定字段验证条件，调用validate()方法验证
+		if($test->hasErrors()){
+		  echo 'has errors';die;
+		};//通过该方法判断是否有错误
+		$test->save();把数据保存到表test 中
+  
+5.数据模型之单表修改数据
+
+  //修改数据，先取出数据，然后利用对象直接设置字段名的值，最后调用save()方法保存进数据库
+   $result=Model::find()->where(['id'=>1])->one();
+   $result->title='title1';
+   $result->save();
+  
