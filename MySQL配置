@@ -1,0 +1,87 @@
+1.创建用户，初始化数据库
+	groupadd mysql                                 #新建mysql组
+	useradd -g mysql -s /sbin/nologin mysql        #新建mysql组下的mysql用户,并设置为无登录Linux权限用户
+	
+2.授权mysql数据库目录
+	chown -R mysql:mysql /usr/local/mysql          #改变/usr/local/mysql的属主权限
+	chown -R mysql:mysql /var/lib/mysql            #改变/var/lib/mysql的属主权限,此步视mysql_sock文件的存放位置而定
+	
+3.初始化mysql数据库
+	/usr/local/mysql/bin/mysqld \
+	--user=mysql \
+	--basedir=/usr/local/mysql \
+	--datadir=/usr/local/mysql/data \
+	--pid-file=/usr/local/mysql/data/mysql.pid \
+	--tmpdir=/tmp
+	
+4.拷贝配置文件,修改配置文件
+	cp support-files/my-default.cnf /etc/my.cnf     #拷贝配置文件至/etc/my.cnf下,support-files/my-default.cnf路径为原mysql解压后的目录下的文件
+	vim /etc/my.cnf           #修改配置文件
+		[mysqld]
+		character_set_server=utf8
+		init_connect='SET NAMES utf8'
+		#skip-grant-tables
+		datadir = /usr/local/mysql/data
+		log-error = /usr/local/mysql/data/error.log
+		pid-file = /usr/local/mysql/data/mysql.pid
+		user = mysql
+		tmpdir = /tmp
+		
+		sql_mode=NO_ENGINE_SUBSTITUTION,STRICT_TRANS_TABLES 
+		[client]
+		default-character-set=utf8
+		
+5.拷贝启动文件，并授权
+	cp support-files/mysql.server /etc/init.d/mysqld  #添加mysqld系统服务,support-files/mysql.server路径为原mysql解压后的目录下的文件
+	chmod +x /etc/init.d/mysqld                       #授权为可执行文件,即可用systemctl restart mysqld.service或service mysqld start启动管理
+	
+	
+6.链接可执行文件到系统环境变量(方便管理)：
+	ln -s /usr/local/mysql/lib/mysql /usr/lib64/mysql
+	ln -s /usr/local/mysql/include/mysql /usr/include/mysql
+	ln -s /usr/local/mysql/bin/mysql /usr/bin/mysql
+	ln -s /usr/local/mysql/bin/mysqldump /usr/bin/mysqldump
+	ln -s /usr/local/mysql/bin/myisamchk /usr/bin/myisamchk
+	ln -s /usr/local/mysql/bin/mysqld_safe /usr/bin/mysqld_safe
+	ln -s /usr/local/mysql/bin/mysqladmin /usr/bin/mysqladmin
+	
+7.启动数据库
+	/etc/init.d/mysqld start (还可用service mysqld start或者systemctl start mysqld.service)
+	
+8.更改初始化生成的数据库密码
+	注：由于5.7版本会初始化设置密码，需要自己修改，跟之前的数据库版本更改方式不一样
+	有两种方法:
+		1.vim /etc/my.cnf 加入skip-grant-tables   #设置为免密码登录数据库
+		  /etc/init.d/mysqld start   #重新启动mysql
+		  mysql -u root -p    #免密码登录数据库中
+		  update mysql.user set authentication_string=password('root') where user='root' ;  #修改密码，注5.7的password字段改为authentication_string
+		  更改完后，注释掉my.cnf里面的skip-grant-tables 这一行，重启MySQL登录验证即可，然后就可以登录数据库进行一些简单的操作了
+		  
+		2.cat ~/.mysql_secret   # 查看mysql默认的初始密码
+		  mysql -uroot -p       # 输入.mysql_secret文件内的初始密码,登录到数据库中
+		  update mysql.user set authentication_string=password('root') where user='root' ;  #修改密码，注5.7的password字段改为authentication_string
+		  更改完后，注释掉my.cnf里面的skip-grant-tables 这一行，重启MySQL登录验证即可，然后就可以登录数据库进行一些简单的操作了
+		  
+9.修改MYSQL的命令提示符方法:
+	1.登录时加上参数  --prompt提示符  即可，如：mysql -u root -p --prompt \u>
+		登录进mysql后提示符形式为:root>
+		
+	2.登录进mysql后再使用prompt命令修改:prompt \u>
+		mysql提示符形式为:root>
+		
+	注：prompt后面的参数可以为: \u(当前用户) \h(服务器名称) \d(当前数据库) \D(完整的日期) ,亦可为其他字符串形式
+		一般常用格式:prompt \u@\h \d>
+	
+10.MYSQL语句的规范:
+	1.关键字与函数名称全部大写
+	2.数据库名称、表名称、字段名称全部小写
+	3.SQL语句必须以分号结尾
+		  
+	
+	
+	
+	
+	
+	
+	
+	
