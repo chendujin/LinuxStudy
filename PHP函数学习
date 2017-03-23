@@ -1,0 +1,50 @@
+1.PHP中可变函数的使用:
+  在PHP中如果将“函数名称”赋予字符串类型的变量，但是在使用该变量时，如果带有小括号，那么PHP引擎将解析该函数
+  可变函数的作用是在回调函数里使用
+  get_defined_functions();得到所有已定义的函数，返回的是数组，包含系统函数和用户自定义的函数
+  
+2.回调函数的使用:
+    1.常用的系统回调函数:
+	  array_map(callable  $callback  , array $arr1  [, array $...  ]);  将回调函数作用到给定数组的单元上 
+		返回值：返回一个数组，该数组的每个元素都都是经过回调函数（callback）处理了的。callback  接受的参数数目应该和传递给 array_map()  函数的数组数目一致。
+	  
+	  array_walk();使用用户自定义函数对数组中的每个元素做回掉处理,经过该函数处理后的数组的值会发生变化。
+		返回true 或者 false
+		例子：
+		$array = array(1,2,3,4,5,6,7,8,9);
+		function test(&$var)
+		{
+		   $var *= 3;
+		   return $var;
+		}
+		$res = array_walk($array,'test');
+		
+		array_filter();用回调函数过滤数组中的单元
+		说明：array array_filter(array $array [,callbale $callback [,int $flag = 0]]);
+		依次将array数组中的每个值传递到callback函数，如果callback函数返回true，则input数组的当前值会被包含在返回的结果数组中。数组的键名保留不变。
+		例子：
+		$array = array(1,2,3,4,5,6,7);
+		function odd($var)
+		{
+		  if($var % 2 == 1)
+		  {
+			return $var;
+		  }
+		}
+		$res = array_filter($array,'odd');
+		
+		如何调用回调函数：
+		可以通过可变函数的形式在函数体中进行调用
+		可以通过call_user_func() 和 call_user_func_array() 进行调用
+		1、call_user_func();
+		把第一个参数作为回调函数调用
+		例子：echo call_user_func('md5','test');  返回test加密后的字符串
+		2、call_user_func_array();
+		调用回调函数，并把一个数组参数作为回调函数的参数
+		function add($x,$y)
+		{
+		  return $x+$y;
+		}
+		echo call_user_func('add',1,2);   
+		echo call_user_func_array('add', arary(2,3));
+		以上两种形式实现的效果相同
