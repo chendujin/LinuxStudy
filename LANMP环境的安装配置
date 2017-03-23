@@ -1,0 +1,671 @@
+一、Linux虚拟机的网络配置
+1.修改网络配置命令：
+	vi /etc/sysconfig/network-scripts/ifcfg-xxx
+		ONBOOT=yes  #开启网络
+		静态IP配置：
+			IPADDR = 192.168.1.199  #IP地址随意,不冲突即可
+			NETMASK = 255.255.255.0  #子网掩码
+			NM_CONTROLLED = no 
+			BOOTTPROTO = static  #静态网络
+		重启网络服务：systemctl restart network.service
+
+2.防火墙开启远程登录ssh:22端口命令：
+	firewall-cmd --zone=public --add-port=22/tcp --permanent
+	
+3.重启防火墙服务命令：
+	systemctl restart firewalld.service
+	
+4.虚拟机设置中把网络连接类型改为桥接类型
+
+
+二、Apache的安装
+   下载apache(官网):httpd.apache.org; -->download  复制下载链接
+   wget http://apache.fayea.com//httpd/httpd-2.4.25.tar.gz
+   tar -zxvf httpd-2.4.25.tar.gz    解压
+   cd httpd-2.4.25 进入httpd文件目录
+   ./configure --prefix=/usr/local/apache(指定安装目录)   编译前的准备工作
+   安装apr和apr-util:cd ..   返回主目录
+      wget http://mirror.bit.edu.cn/apache//apr/apr-1.5.2.tar.gz   下载apr
+	  wget http://mirror.bit.edu.cn/apache//apr/apr-util-1.5.4.tar.gz   下载apr-util
+	  ll 查看当前文件
+	  tar -zxvf apr-1.5.2.tar.gz  解压apr
+	  tar -zxvf apr-util-1.5.4.tar.gz  解压apr-util
+	  ll
+	  mv apr-1.5.2 apr   重命名文件，去掉版本号
+	  mv apr-util-1.5.4 apr-util   重命名文件，去掉版本号
+	  ll
+	  mv apr apr-util httpd-2.4.25/srclib/   移动两个文件至httpd-2.4.25/srclib/目录下
+   下载pcre正则依赖: wget ftp://ftp.csx.cam.ac.uk/pub/software/programming/pcre/pcre-8.39.tar.gz
+   tar -zxvf pcre-8.39.tar.gz  解压pcre
+   cd pcre-8.39/  进入pcre目录
+   ./configure --prefix=/usr/local/pcre-8.39   编译安装前的准备工作
+   make && make install  编译与安装
+   cd ..
+   cd httpd-2.4.25 进入httpd文件目录
+   ./configure --prefix=/usr/local/apache -with-pcre=/usr/local/pcre-8.39/bin/pcre-config -with-included-apr  编译安装前的准备工作
+   make && make install  编译与安装
+   cd /usr/local/apache/bin/  进入apache安装目录
+   ./apachectl -k start   启动apache服务
+   firewall-cmd --zone=public --add-port=80/tcp --permanent  对防火墙设置允许访问80端口
+   systemctl restart firewalld.service   设置后重启防火墙服务
+   
+   
+三、Nginx的安装
+	创建运行用户、组：Nginx服务程序默认以nobody身份运行，建议为其创建专门的用户账号，以便更准确地控制其访问权限，增加灵活性、降低安全风险。
+		如：创建一个名为nginx的用户，不建立宿主目录，也禁止登录到shell环境。
+			useradd -M -s /sbin/nologin nginx        #-M为不建立宿主目录  -s /sbin/nologin 为禁止登陆到shell环境
+   1.下载nginx(官网):nginx.org; -->nginx-1.10.2  复制下载链接
+   wget http://nginx.org/download/nginx-1.10.2.tar.gz
+   tar -zxvf nginx-1.10.2.tar.gz    解压
+   ls -alh | grep nginx   只查看nginx文件的大小
+   cd nginx-1.10.2  进入文件目录
+   // ./configure --prefix=/usr/local/nginx --with-http_stub_status_module --with-pcre=../pcre-8.39/(引用pcre包路径)      编译安装前的准备工作
+   或者：
+		./configure \
+		--prefix=/usr/local/nginx \
+		#--sbin-path=/usr/sbin/nginx \
+		#--conf-path=/etc/nginx/nginx.conf \
+		#--error-log-path=/var/log/nginx/error.log \
+		#--http-log-path=/var/log/nginx/access.log \
+		#--pid-path=/var/run/nginx.pid \
+		#--lock-path=/var/run/nginx.lock \
+		#--http-client-body-temp-path=/var/tmp/nginx/client \
+		#--http-proxy-temp-path=/var/tmp/nginx/proxy \
+		#--http-fastcgi-temp-path=/var/tmp/nginx/fcgi \
+		#--http-uwsgi-temp-path=/var/tmp/nginx/uwsgi \
+		#--http-scgi-temp-path=/var/tmp/nginx/scgi \
+		--user=nginx \
+		--group=nginx \
+		--with-pcre=../pcre-8.39/ \    #引用pcre包路径
+		--with-http_v2_module \
+		--with-http_ssl_module \
+		--with-http_realip_module \
+		--with-http_addition_module \
+		--with-http_sub_module \
+		--with-http_dav_module \
+		--with-http_flv_module \
+		--with-http_mp4_module \
+		--with-http_gunzip_module \
+		--with-http_gzip_static_module \
+		--with-http_random_index_module \
+		--with-http_secure_link_module \
+		--with-http_stub_status_module \
+		--with-http_auth_request_module \
+		--with-mail \
+		--with-mail_ssl_module \
+		--with-file-aio \
+		--with-ipv6 \
+		--with-http_v2_module \
+		--with-threads \
+		--with-stream \
+		--with-stream_ssl_module
+   make && make install   编译与安装
+   cd /usr/local/nginx/   进入nginx目录
+   cd sbin/  进入sbin目录
+   ps aux | grep httpd  查看是否有apache进程，会与nginx冲突
+   如果有apache进程，则暴力杀死这些进程：kill -9 进程号1 进程号2 ...
+   ./nginx  启动nginx服务
+   浏览器调试：192.168.1.119:80
+   
+   2.启动php-fpm工作:
+      cd /usr/local/phpxxxx/sbin/   进入已安装的php的sbin目录
+	  ll 
+	  ./php-fpm  启动fpm服务
+	  错误1：没有找到文件：/usr/local/phpxxxx/etc/php-fpm.conf
+	  解决：cd /usr/local/phpxxxx/etc/   进入配置文件目录
+	        ll 查看配置文件
+			mv php-fpm.conf.default php-fpm.conf   把php-fpm.conf.default重命名为php-fpm.conf
+	  ../sbin/php-fpm   再次启动fpm服务
+	  错误2：在/usr/local/phpxxxx/etc/php-fpm.conf文件的125行有错误
+	  解决：vim /usr/local/phpxxxx/etc/php-fpm.conf  编辑该文件
+	        125行：/usr/local/phpxxxx/etc/php-fpm.d/*.conf   该行代码显示在/etc/php-fpm.d目录下会包含所有以.conf结尾的文件
+			cd /usr/local/phpxxxx/etc/php-fpm.d/ 进入php-fpm.d目录
+			cp www.conf.default www.conf   也将该文件重命名为.conf结尾
+			cd /usr/local/phpxxxx/sbin/   进入sbin目录
+			./php-fpm   再次启动php-fpm服务
+			ps aux | grep php-fpm  查看php-fpm是否真的启动成功
+			
+	  添加php-fpm启动脚本：
+		cp /usr/local/src/php-5.6.23/sapi/fpm/init.d.php-fpm /etc/init.d/php-fpm
+		chmod +x /etc/init.d/php-fpm
+	  添加php-fpm开机启动：
+		vim /lib/systemd/system/php-fpm.service
+		
+		[Unit]
+		Description=php-fpm
+		After=network.target
+		[Service]
+		Type=forking
+		ExecStart=/usr/local/php/sbin/php-fpm
+		ExecReload=/usr/local/php/sbin/php-fpm -s reload
+		ExecStop=/usr/local/php/sbin/php-fpm -s quit
+		PrivateTmp=true
+		[Install]
+		WantedBy=multi-user.target
+		
+		
+   
+   3.配置nginx:
+   cd /usr/local/nginx/ 进入nginx安装目录
+   ll
+   cd conf 进入配置目录
+   vim nginx.conf   编辑nginx.conf文件
+   添加如下代码：
+      location ~ \.php {
+				root  /home/www;
+                fastcgi_pass 127.0.0.1:9000;
+                fastcgi_index /index.php;
+
+                include /usr/local/nginx/conf/fastcgi_params;
+
+                fastcgi_split_path_info         ^(.+\.php)(/.+)$;
+                fastcgi_param PATH_INFO         $fastcgi_path_info;
+                fastcgi_param PATH_TRANSLATED   $document_root$fastcgi_path_info;
+                fastcgi_param SCRIPT_FILENAME   $document_root$fastcgi_script_name;
+        }
+	cd ..
+	cd html/ 进入nginx的项目目录
+	测试项目：vim test.php
+	
+	如果在浏览器中是下载test.php文件，则进行重新启动nginx
+	cd /usr/local/nginx/sbin/ 进入nginx安装目录的sbin目录
+	./nginx -s reload  重启nginx服务
+	
+	4.添加nginx至系统服务(可用systemctl管理的系统服务)
+	vim /etc/init.d/nginx
+		添加内容如下:
+		
+			#!/bin/sh 
+			# 
+			# nginx - this script starts and stops the nginx daemon 
+			# 
+			# chkconfig:   - 85 15 
+			# description: Nginx is an HTTP(S) server, HTTP(S) reverse \ 
+			#               proxy and IMAP/POP3 proxy server 
+			# processname: nginx 
+			# config:      /etc/nginx/nginx.conf 
+			# config:      /etc/sysconfig/nginx 
+			# pidfile:     /var/run/nginx.pid 
+			# Source function library. 
+			. /etc/rc.d/init.d/functions
+			# Source networking configuration. 
+			. /etc/sysconfig/network
+			# Check that networking is up. 
+			[ "$NETWORKING" = "no" ] && exit 0
+			nginx="/usr/local/nginx/sbin/nginx"
+			prog=$(basename $nginx)
+			NGINX_CONF_FILE="/usr/local/nginx/conf/nginx.conf"
+			[ -f /etc/sysconfig/nginx ] && . /etc/sysconfig/nginx
+			lockfile=/var/lock/subsys/nginx
+			start() {
+				[ -x $nginx ] || exit 5
+				[ -f $NGINX_CONF_FILE ] || exit 6
+				echo -n $"Starting $prog: " 
+				daemon $nginx -c $NGINX_CONF_FILE
+				retval=$?
+				echo 
+				[ $retval -eq 0 ] && touch $lockfile
+				return $retval
+			}
+			stop() {
+				echo -n $"Stopping $prog: " 
+				killproc $prog -QUIT
+				retval=$?
+				echo 
+				[ $retval -eq 0 ] && rm -f $lockfile
+				return $retval
+			killall -9 nginx
+			}
+			restart() {
+				configtest || return $?
+				stop
+				sleep 1
+				start
+			}
+			reload() {
+				configtest || return $?
+				echo -n $"Reloading $prog: " 
+				killproc $nginx -HUP
+			RETVAL=$?
+				echo 
+			}
+			force_reload() {
+				restart
+			}
+			configtest() {
+			$nginx -t -c $NGINX_CONF_FILE
+			}
+			rh_status() {
+				status $prog
+			}
+			rh_status_q() {
+				rh_status >/dev/null 2>&1
+			}
+			case "$1" in
+				start)
+					rh_status_q && exit 0
+				$1
+					;;
+				stop)
+					rh_status_q || exit 0
+					$1
+					;;
+				restart|configtest)
+					$1
+					;;
+				reload)
+					rh_status_q || exit 7
+					$1
+					;;
+				force-reload)
+					force_reload
+					;;
+				status)
+					rh_status
+					;;
+				condrestart|try-restart)
+					rh_status_q || exit 0
+						;;
+				*)
+				  echo $"Usage: $0 {start|stop|status|restart|condrestart|try-restart|reload|force-reload|configtest}" 
+					exit 2
+			esac
+			
+			5.建立nginx为开机启动(才可用systemctl enable nginx.service这个命令)
+				源码包编译安装的需自己建立/lib/systemd/system/nginx.service文件
+				开机没有登陆情况下就能运行的程序，存在系统服务（system）里，/lib/systemd/system/
+				vi /lib/systemd/system/nginx.service
+				
+				[Unit]
+				Description=nginx
+				After=network.target
+				  
+				[Service]
+				Type=forking
+				ExecStart=/usr/local/nginx/sbin/nginx
+				ExecReload=/usr/local/nginx/sbin/nginx -s reload
+				ExecStop=/usr/local/nginx/sbin/nginx -s quit
+				PrivateTmp=true
+				  
+				[Install]
+				WantedBy=multi-user.target
+				
+				
+				[Unit]:服务的说明
+				Description:描述服务
+				After:描述服务类别
+				[Service]服务运行参数的设置
+				Type=forking是后台运行的形式
+				ExecStart为服务的具体运行命令
+				ExecReload为重启命令
+				ExecStop为停止命令
+				PrivateTmp=True表示给服务分配独立的临时空间
+				注意：[Service]的启动、重启、停止命令全部要求使用绝对路径
+				[Install]运行级别下服务安装的相关设置，可设置为多用户，即系统运行级别为3
+				
+				保存退出。
+				设置开机启动：systemctl enable nginx.service
+				查看所有已启动的服务：systemctl list-units --type=service
+
+	
+四、MySQL的安装
+	Centos 7.2 编译安装 MySQL 5.7.14(说明：mysql5.7系列指定boost版本为boost_1_59_0)
+	
+	1.环境准备
+		1.查看系统版本
+		    [root@lnmp ~]# cat /etc/redhat-release
+			CentOS Linux release 7.2.1511 (Core)
+			[root@lnmp ~]# uname -r
+			3.10.0-327.28.2.el7.x86_64
+			
+		2.卸载系统自带的mysql/mariadb数据库及boost旧版本
+			rpm -qa | grep mysql
+			rpm -qa | grep mariadb
+			rpm -qa | grep boost    //查看系统自带boost
+			yum -y remove boost-*   //卸载boost
+			rpm -e --nodeps boost-system-1.53.0-25.el7.x86_64
+			rpm -e --nodeps boost-thread-1.53.0-25.el7.x86_64
+			rpm -e mariadb-libs-5.5.47-1.el7_2.x86_64
+			rpm -e --nodeps mariadb-libs-5.5.47-1.el7_2.x86_64
+			boost官网http://www.boost.org/ ，yum -y install boost boost-devel boost-doc安装的是boost1.53版本
+			
+		3.准备安装文件
+			wget http://downloads.sourceforge.net/project/boost/boost/1.59.0/boost_1_59_0.tar.gz
+			wget ftp://ftp.ntu.edu.tw/pub/MySQL/Downloads/MySQL-5.7/mysql-5.7.14.tar.gz
+			
+		4.依赖包安装
+			yum -y install make gcc-c++ cmake bison-devel ncurses-devel libaio libaio-devel perl-Data-Dumper net-tools
+			
+	2.安装boost/mysql
+		1.安装boost(旧版本的boost必须卸载干净才可以)
+			1 tar -zxvf boost_1_59_0
+			2 cd boost_1_59_0
+			3 ./bootstrap.sh --with-libraries=system,filesystem,log,thread --with-toolset=gcc
+			4 ./b2 toolset=gcc cxxflags="-std=c++11"     //使用c++11标准，编译的库要使用统一标准
+			5 ./b2 install --prefix=/usr/local/boost
+			
+			或者 mv boost_1_59_0 /usr/local/boost 这样安装
+			
+			#默认安装在/usr/local/lib目录下;头文件在/usr/local/include/boost目录下；install后面可以加参数 --prefix=/usr 来设置安装路径
+			#如果提示boost版本不对应则卸载boost安装对应版本boost
+			
+		2.编译安装mysql
+			tar -zxvf mysql-5.7.17.tar.gz
+			cd mysql-5.7.17
+			
+			cmake \
+			-DCMAKE_INSTALL_PREFIX=/usr/local/mysql \
+			-DMYSQL_DATADIR=/usr/local/mysql/data \
+			-DSYSCONFDIR=/etc \
+			-DWITH_MYISAM_STORAGE_ENGINE=1 \
+			-DWITH_INNOBASE_STORAGE_ENGINE=1 \
+			-DWITH_MEMORY_STORAGE_ENGINE=1 \
+			-DWITH_READLINE=1 \
+			-DMYSQL_UNIX_ADDR=/var/lib/mysql/mysql.sock \
+			-DMYSQL_TCP_PORT=3306 \
+			-DENABLED_LOCAL_INFILE=1 \
+			-DWITH_PARTITION_STORAGE_ENGINE=1 \
+			-DEXTRA_CHARSETS=all \
+			-DDEFAULT_CHARSET=utf8 \
+			-DDEFAULT_COLLATION=utf8_general_ci \
+			-DDOWNLOAD_BOOST=1 \
+			-DWITH_BOOST=/usr/local/boost
+			
+			make && make install
+			
+			配置详解:
+			4 cmake \
+			5 -DCMAKE_INSTALL_PREFIX=/usr/local/mysql \ 　　　 #MySQL的安装目录
+			6 -DMYSQL_DATADIR=/usr/local/mysql/data \ 　　　 　#MySQL的数据目录
+			7 -DSYSCONFDIR=/etc \ 　　　　　　　　　　　　　　　  #my.cnf路径
+			8 -DWITH_MYISAM_STORAGE_ENGINE=1 \ 　　　　　　　　 #启用MySQL的myisam引擎
+			9 -DWITH_INNOBASE_STORAGE_ENGINE=1 \ 　　　　　　　 #启用MySQL的innobase引擎
+			10 -DWITH_MEMORY_STORAGE_ENGINE=1 \                #启用MySQL的memory引擎
+			11 -DWITH_READLINE=1 \                             #启用readline库支持（提供可编辑的命令行）
+			12 -DMYSQL_UNIX_ADDR=/var/lib/mysql/mysql.sock \   #连接数据库socket路径
+			13 -DMYSQL_TCP_PORT=3306 \                         #MySQL端口
+			14 -DENABLED_LOCAL_INFILE=1 \                      #允许从本地导入数据
+			15 -DWITH_PARTITION_STORAGE_ENGINE=1 \             #安装支持数据库分区
+			16 -DEXTRA_CHARSETS=all \                          #安装所有的字符集
+			17 -DDEFAULT_CHARSET=utf8 \                        #设置默认字符集为utf-8
+			18 -DDEFAULT_COLLATION=utf8_general_ci \           #设定默认排序规则（utf8_general_ci快速/utf8_unicode_ci准确）
+			19 -DDOWNLOAD_BOOST=1 \                            #下载boost
+			20 -DWITH_BOOST=/usr/local/boost                  #boost的安装目录
+			
+			
+	3.MySQL的配置
+		1.创建用户，初始化数据库
+			groupadd mysql                                 #新建mysql组
+			useradd -g mysql -s /sbin/nologin mysql        #新建mysql组下的mysql用户,并设置为无登录Linux权限用户
+			
+		2.授权mysql数据库目录
+			chown -R mysql:mysql /usr/local/mysql          #改变/usr/local/mysql的属主权限
+			chown -R mysql:mysql /var/lib/mysql            #改变/var/lib/mysql的属主权限,此步视mysql_sock文件的存放位置而定
+			
+		3.初始化mysql数据库
+			/usr/local/mysql/bin/mysqld \
+			--user=mysql \
+			--basedir=/usr/local/mysql \
+			--datadir=/usr/local/mysql/data \
+			--pid-file=/usr/local/mysql/data/mysql.pid \
+			--tmpdir=/tmp
+			
+		4.拷贝配置文件,修改配置文件
+			cp support-files/my-default.cnf /etc/my.cnf     #拷贝配置文件至/etc/my.cnf下,support-files/my-default.cnf路径为原mysql解压后的目录下的文件
+			vim /etc/my.cnf           #修改配置文件
+				[mysqld]
+				character_set_server=utf8
+				init_connect='SET NAMES utf8'
+				#skip-grant-tables
+				datadir = /usr/local/mysql/data
+				log-error = /usr/local/mysql/data/error.log
+				pid-file = /usr/local/mysql/data/mysql.pid
+				user = mysql
+				tmpdir = /tmp
+				
+				sql_mode=NO_ENGINE_SUBSTITUTION,STRICT_TRANS_TABLES 
+				[client]
+				default-character-set=utf8
+				
+		5.拷贝启动文件，并授权
+			1.添加mysqld至系统服务
+			cp support-files/mysql.server /etc/init.d/mysqld  #添加mysqld系统服务,support-files/mysql.server路径为原mysql解压后的目录下的文件
+			chmod +x /etc/init.d/mysqld                       #授权为可执行文件,即可用systemctl restart mysqld.service或service mysqld start启动管理
+			2.添加mysqld至开机自启服务(即可用systemctl enable mysqld管理)
+			vim /lib/systemd/system/mysqld.service
+				[Unit]
+				Description=mysqld
+				After=network.target
+				  
+				[Service]
+				Type=forking
+				ExecStart=/usr/local/mysql/bin/mysql
+				ExecReload=/usr/local/mysql/bin/mysql -s reload
+				ExecStop=/usr/local/mysql/bin/mysql -s quit
+				PrivateTmp=true
+				  
+				[Install]
+				WantedBy=multi-user.target
+
+			
+		6.链接可执行文件到系统环境变量(方便管理)：
+			ln -s /usr/local/mysql/lib/mysql /usr/lib64/mysql
+			ln -s /usr/local/mysql/include/mysql /usr/include/mysql
+			ln -s /usr/local/mysql/bin/mysql /usr/bin/mysql
+			ln -s /usr/local/mysql/bin/mysqldump /usr/bin/mysqldump
+			ln -s /usr/local/mysql/bin/myisamchk /usr/bin/myisamchk
+			ln -s /usr/local/mysql/bin/mysqld_safe /usr/bin/mysqld_safe
+			ln -s /usr/local/mysql/bin/mysqladmin /usr/bin/mysqladmin
+			
+		7.启动数据库
+			/etc/init.d/mysqld start (还可用service mysqld start或者systemctl start mysqld.service)
+			
+		8.更改初始化生成的数据库密码
+			注：由于5.7版本会初始化设置密码，需要自己修改，跟之前的数据库版本更改方式不一样
+			有两种方法:
+				1.vim /etc/my.cnf 加入skip-grant-tables   #设置为免密码登录数据库
+				  /etc/init.d/mysqld start   #重新启动mysql
+				  mysql -u root -p    #免密码登录数据库中
+				  update mysql.user set authentication_string=password('root') where user='root' ;  #修改密码，注5.7的password字段改为authentication_string
+				  更改完后，注释掉my.cnf里面的skip-grant-tables 这一行，重启MySQL登录验证即可，然后就可以登录数据库进行一些简单的操作了
+				  
+				2.cat ~/.mysql_secret   # 查看mysql默认的初始密码
+				  mysql -uroot -p       # 输入.mysql_secret文件内的初始密码,登录到数据库中
+				  update mysql.user set authentication_string=password('root') where user='root' ;  #修改密码，注5.7的password字段改为authentication_string
+				  更改完后，注释掉my.cnf里面的skip-grant-tables 这一行，重启MySQL登录验证即可，然后就可以登录数据库进行一些简单的操作了
+				  
+		9.修改MYSQL的命令提示符方法:
+			1.登录时加上参数  --prompt提示符  即可，如：mysql -u root -p --prompt \u>
+				登录进mysql后提示符形式为:root>
+				
+			2.登录进mysql后再使用prompt命令修改:prompt \u>
+				mysql提示符形式为:root>
+				
+			注：prompt后面的参数可以为: \u(当前用户) \h(服务器名称) \d(当前数据库) \D(完整的日期) ,亦可为其他字符串形式
+				一般常用格式:prompt \u@\h \d>
+			
+		10.MYSQL语句的规范:
+			1.关键字与函数名称全部大写
+			2.数据库名称、表名称、字段名称全部小写
+			3.SQL语句必须以分号结尾
+			
+五、PHP的安装
+1.裸机必备安装软件：vim,wget,gcc,gcc++,libxml2-devel
+					yum -y install libmcrypt libmcrypt-devel mhash mhash-devel libxml2 libxml2-devel bzip2 bzip2-devel
+
+2.PHP源码安装：(PHP官网下载:php.net)
+	wget http://hk1.php.net/get/.......
+
+3.解压
+	tar -zxvf mirror
+	cd php-7.07
+	./configure --prefix=/usr/local/php \     #安装的目录
+				--with-mysql=mysqlnd --with-openssl \
+				--with-mysqli=mysqlnd \
+				--enable-mbstring \
+				--with-freetype-dir \
+				--with-jpeg-dir \
+				--with-png-dir \
+				--with-zlib --with-libxml-dir=/usr \
+				--enable-xml  --enable-sockets \
+				--with-apxs2=/usr/local/apache/bin/apxs \
+				--with-mcrypt  --with-config-file-path=/etc \
+				--with-config-file-scan-dir=/etc/php.d \
+				--enable-maintainer-zts \
+				--with-curl \
+				--with-gd \
+				--enable-ftp \
+				--enable-zip \
+				--enable-soap \
+				--disable-debug \
+				--with-fpm-user=nginx \
+				--with-fpm-group=nginx \
+				--enable-fpm \		#必备fpm
+				--disable-fileinfo
+				
+	或者：
+	./configure --prefix=/usr/local/webserver/php \
+			--with-config-file-path=/usr/local/webserver/php/etc \
+			--with-fpm-user=www \
+			--with-fpm-group=www \
+			--enable-fpm \
+			--with-mysql=mysqlnd \
+			--with-pdo-mysql=mysqlnd
+			--with-mysqli=mysqlnd \
+			--with-pdo-mysql=mysqlnd \
+			--disable-fileinfo \
+			--with-iconv-dir=/usr/local \
+			--with-freetype-dir \
+			--with-jpeg-dir \
+			--with-png-dir \
+			--with-zlib \
+			--with-libxml-dir=/usr \
+			--enable-xml \
+			--disable-rpath \
+			--enable-bcmath \
+			--enable-shmop \
+			--enable-exif \
+			--enable-sysvsem \
+			--with-curl \
+			--enable-mbregex \
+			--enable-inline-optimization \
+			--enable-mbstring \
+			--with-mcrypt \
+			--with-gd \
+			--enable-gd-native-ttf \
+			--with-openssl \
+			--with-mhash \
+			--enable-pcntl \
+			--enable-sockets \
+			--with-xmlrpc \
+			--enable-ftp \
+			--with-gettext \
+			--enable-zip \
+			--enable-soap \
+			--disable-ipv6 \
+			--disable-debug
+				
+	make  (编译)
+	make install (安装)
+	
+	复制配置文件
+	cd php-7.0.12
+    cp php.ini-production /etc/php.ini
+	
+	编辑apache配置文件httpd.conf，以apache支持php
+	    vim /etc/httpd/httpd.conf
+		在配置文件最后添加如下二行：
+			    AddType application/x-httpd-php  .php 
+				AddType application/x-httpd-php-source  .phps
+				修改 ：    DirectoryIndex  index.php  index.html
+		重启apache服务：
+		    /usr/local/apache/bin/apachectl restart
+
+4.测试:
+		vim test.php 
+			<?php phpinfo();
+		/usr/local/php7/bin/php test.php
+	
+	
+--prefix=/usr/local/php \
+--exec-prefix=/usr/local/php \
+--bindir=/usr/local/php/bin \
+--sbindir=/usr/local/php/sbin \
+--includedir=/usr/local/php/include \
+--libdir=/usr/local/php/lib/php \
+--mandir=/usr/local/php/php/man \
+--with-config-file-path=/usr/local/php/etc \
+--with-mysql-sock=/var/run/mysql/mysql.sock \
+--with-mcrypt=/usr/include \
+--with-mhash \
+--with-openssl \
+--with-mysql=shared,mysqlnd \
+--with-mysqli=shared,mysqlnd \
+--with-pdo-mysql=shared,mysqlnd \
+--with-gd \
+--with-iconv \
+--with-zlib \
+--enable-zip \
+--enable-inline-optimization \
+--disable-debug \
+--disable-rpath \
+--enable-shared \
+--enable-xml \
+--enable-bcmath \
+--enable-shmop \
+--enable-sysvsem \
+--enable-mbregex \
+--enable-mbstring \
+--enable-ftp \
+--enable-gd-native-ttf \
+--enable-pcntl \
+--enable-sockets \
+--with-xmlrpc \
+--enable-soap \
+--without-pear \
+--with-gettext \
+--enable-session \
+--with-curl \
+--with-jpeg-dir \
+--with-freetype-dir \
+--enable-opcache \
+--enable-fpm \
+--enable-fastcgi \
+--with-fpm-user=nginx \
+--with-fpm-group=nginx \
+--without-gdbm \
+--disable-fileinfo
+	
+	php7已结不支持mysql了，只能用pdo连接
+	
+	PHP无法连接MySQL数据库：
+	update user set host = '%' where user = 'root';
+	FLUSH PRIVILEGES;
+	
+	
+			
+			
+
+   
+	  
+   
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
