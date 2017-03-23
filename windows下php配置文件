@@ -1,0 +1,73 @@
+一、独立安装PHP的配置php.ini文件：
+
+1.开启加载PHP扩展模块的目录：（找ext字符串）
+   extension_dir = "E:\wamp\php5.6\ext"
+
+2.开启加载各种PHP所需的扩展模块：
+  extension=php_curl.dll
+  extension=php_gd2.dll
+  extension=php_mbstring.dll
+  extension=php_mysql.dll
+  extension=php_mysqli.dll
+  extension=php_pdo_mysql.dll
+  extension=php_soap.dll
+  extension=php_sockets.dll
+  extension=php_sqlite3.dll
+  extension=php_sybase_ct.dll
+  extension=php_xmlrpc.dll
+  
+3.开启时区设置:
+  date.timezone = PRC
+  
+  
+二、配置apache配置文件httpd.conf:
+
+1.开启apache支持php功能模块：
+  LoadModule php5_module "E:/wamp/php5.6/php5apache2_4.dll"
+  AddHandler application/x-httpd-php .php
+  AddType application/x-http-php .php
+  PHPIniDir "E:/wamp/php5.6"
+  
+2.配置apache默认访问网站目录:
+   <Directory "E:/wamp/www">
+   .......
+   </Directory>
+   
+3.配置网站默认可省略的文件（可防止别人查看网站的目录结构）:
+  <IfModule dir_module>
+     DirectoryIndex index.html index.php index.htm
+  </IfModule>
+  
+4.配置添加可以执行PHP程序的文件类型：
+   AddType application/x-http-php .php     //.php文件可以执行php程序
+   AddType application/x-http-php .html    //.html文件可以执行php程序
+   AddType application/x-http-php .txt     //.txt文件可以执行php程序
+	
+5.开启apache支持虚拟主机域名:
+   Include conf/extra/httpd-vhosts.conf
+   
+6.添加设置apche的文件类型，否则页面会直接下载:(可随意放置)
+  <FilesMatch "\.php$">
+    SetHandler application/x-httpd-php
+  </FilesMatch>
+  <FilesMatch "\.phps$">
+    SetHandler application/x-httpd-php-source
+  </FilesMatch>
+   
+   
+三、配置虚拟主机域名httpd-vhosts.conf：(一个域名对应一个路径)
+
+   <VirtualHost *:80>
+     ServerAdmin webmaster@dummy-host2.localhost
+     DocumentRoot "E:/wamp/www/www.cena.com"
+     ServerName www.cena.com
+     ErrorLog "logs/dummy-cena.com-error.log"
+     CustomLog "logs/dummy-cena.com-access.log" common
+   </VirtualHost>
+   
+   
+四、添加本地DNS域名解析设置:
+ 
+1.文件路径：C:\Windows\System32\drivers\etc\hosts
+
+2.格式：127.0.0.1 www.cena.com
