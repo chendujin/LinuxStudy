@@ -1,0 +1,110 @@
+1.常用命令:
+	：w保存
+	:wq保存并退出
+	:q退出
+	i 向后插入模式
+	ESC 退出返回命令行模式
+	a 向前插入模式
+	dd 删除整行
+	x 删除光标所在的字符
+	shift+a在行末尾处插入
+	shift+i在行首处插入
+	o(字母) 换行输入字符
+	以上为vim命令；
+
+	以下为终端命令；
+	touch创建一个文件夹
+	rm删除文件或者文件夹
+	ls显示目录
+	pwd当前路径
+	cd进入某个文件夹
+	sudo管理员权限
+	sudo apt-get install+软件名称
+	
+2.打印helloworld
+	i进入插入模式
+	#include <stdio.h>
+	int main()
+	{	
+		printf("hello world\n");   #-4个space(空格）=tab(缩进）
+		return 0;
+	)
+	
+	cc c文件   #编译c文件
+    ./out文件    #执行文件
+	
+3.多文件操作
+	1.多个源文件使用：
+		在命令行模式下可以打开多个文件：
+		esc :sp max.c  新建max.c 文件
+		ctrl+w+下箭头 （下个文件）
+		:set nu (显示行数)
+		9 dd 剪切当前光标往下9行
+		p 粘贴
+		:wqa 保存所有并退出
+		-o：编译时指定输出输出程序名称
+
+		#include "max.c" 就相当于复制max.c中的所有代码到当前文件中 所以如果在main函数中这样，就不用gcc max.c 直接编译执行main函数所在文件就行
+		
+	2.头文件与函数定义
+		C语言 .c .o .h 文件说明
+		.c C语言源代码
+		.o 编译过二进制机器码文件
+		.h 函数说明文件（没有源代码时 看.h就知道函数使用方法）
+		要说明的是.h文件没有实际代码作用，只是给人看的，C语言可以重复定义函数名，这个不像PHP。所有include"xx.h"没有引入实际函数代码，GCC编译做链接才是真真引入
+		
+	3.MakeFile文件的创建
+		MakeFile
+		1.# ：注释
+		2.写法 递归方式
+		hello.out:max.o min.o hello.c
+			gcc max.o min.o hello.c -o hello.out
+		max.o:max.c
+				gcc -c max.c
+		min.o:min.c
+			gcc -c min.c
+		(Linux编辑时，1个 Tab 想当8个空格)
+		保存 退出 （:wq）
+
+		3.执行 make 命令（自动执行Makefile）。执行时如果有文件已经编译过，就不需要编译，从而节约了时间。
+		*.o清除所有的.o文件。
+		cat为查看文件内容。
+		
+	4.main函数中的参数
+		1.&&命令链接 
+			gcc main.c -o main.out && ./main.out
+			// && 语义是 前面的命令执行完成后继续执行&& 后面的命令或者程序
+			当&&前面是程序时，返回值必须为0才能继续执行&&后面的程序或者命令。
+			2. int main(int argv,char* argcp[])//这是完整的main函数。
+			3.echo $? //程序执行完后输入，如果出现0则证明程序运行成功，出现别的数字表示运行失败，（出现的数字为程序返回值的数字）
+			4.sudo apt-get update //程序成绩命令
+			5.cd ~//家命令
+			6.ls //显示当前目录文件 ls -l//当前目录文件的属性
+		
+		2..int main(int agrv,char*agrc[]):可以接收linux系统给main函数传递参数
+			其中agrv为输入的参数总个数,agrc的值为该程序运行时所添加的参数的值组合的数组
+			例如：int main(int argv,char* argc[])
+			{
+				printf("argv is %d\n",argv);
+				int i;
+				for(i=0;i<argv;i++){
+					printf("argc[%d] is %s\n",i,argc[i]);
+				}
+				return 0;
+			}
+			通过该函数可以把程序运行时所添加的参数输出来
+			
+			
+4.标准输入流、标准输出流、标准错误流
+	执行一个shell命令行时通常会自动打开三个标准文件，即标准输入文件（stdin），通常对应终端的键盘；标准输出文件（stdout）和标准错误输出文件（stderr），这两个文件都对应终端的屏幕。进程将从标准输入文件中得到输入数据，将正常输出数据输出到标准输出文件，而将错误信息送到标准错误文件中。
+	
+	Linux系统将所有设备当作文件来处理
+	stdin 默认键盘  标准输入流
+	stdout 默认显示器 标准输出流
+	sterr 标准错误流
+	
+	printf("") 是对fprintf(stdout,"")函数的封装.
+	scanf("") 是对fscanf(stdin,"")函数的封装
+		
+			  
+		
