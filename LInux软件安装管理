@@ -1,0 +1,121 @@
+1.软件包的分类：
+  1.1 源码包：脚本安装包
+  1.2 二进制包：RPM包、系统默认包
+  
+2.RPM包的命令管理
+  2.1 RPM包的安装命令:
+    包全名：操作的包是没有安装的软件包时，使用包全名。而且要注意路径
+	包名：操作已经安装的软件包时，使用包名，是搜索/var/lib/rpm/中的数据库
+	
+	rpm -ivh 包全名
+	  选项：
+	     -i (install)  安装
+		 -v (verbose)  显示详细信息
+		 -h (hash)  显示进度
+		 --nodeps  不检测依赖性(实际工作中不允许这个设置)
+		 
+  2.2 RPM包的升级与卸载:
+    升级：rpm -Uvh 包全名
+	       选项：
+	         -U (upgrade)  安装
+			 
+	卸载：rpm -e 包名
+	       选项：
+	         -e (erase)  卸载
+			 --nodeps  不检测依赖性(实际工作中不允许这个设置)
+			 
+  2.3 RPM包的安装查询:
+    2.3.1 查询是否安装：
+	   rpm -q 包名    #查询包是否安装
+	     -q  查询(query)
+		 
+	   rpm -qa      #查询所有已经安装的RPM包
+	     -a  所有(all)
+		 
+	   rpm -qa | grep 包名     #查询所有关联的已经安装的RPM包
+	     -a  所有(all)
+	     
+	2.3.2 查询软件包的详细信息:
+	   rpm -qi 包名
+	     选项：
+		   -i  查询软件信息(information)
+		   -p  查询未安装包的信息(package)
+		   
+    2.3.3 查询包中文件安装位置:
+	   rpm -ql 包名
+	     -l  列表(list)
+		 -p  查询未安装包的信息(package)
+		 
+	2.3.4 查询系统文件属于哪个RPM包:
+	   rpm -qf 系统文件名(必须是通过RPM包安装过的文件)
+		 -f  查询系统文件属于哪个RPM包(file)
+		 
+   2.4 RPM包的校验:
+     rpm -V 已安装的包名 (可以确定该RPM包内容是否被修改)
+	   选项:
+	     -V  校验指定RPM包中的文件(verify)
+		 
+	 rpm2cpio 包全名 | cpio -idv .文件绝对路径    #RPM包中提取文件
+	    rpm2cpio  #将rpm包转换为cpio格式的命令
+		
+3.Yum在线安装：yum源文件
+	1、yum的优点：将所有软件包放到官方服务器上，当进行yum在线安装时，可以自动解决依赖性问题。（rpm缺点：安装过程中，rpm包依赖性太强）
+	2、redhat的yum在线安装需要付费，centOS不需要。
+	3、在【/etc/yum.repos.d/】目录中，默认有4个yum源文件，其中【CentOS-Base.repo】是基本yum源文件，如果我们能上网，那它是默认生效的，而其他的都是默认不生效的。
+	4、[base]：名字可以随便起。
+	5、name：名字也是随便起。
+	6、mirrorlist和baseurl一个是主站点，一个是辅助站点，这两个有一个就行。可以找一个163或清华大学的yum源更换。
+	7、enabled：默认最后一个容器不生效，其他容器都生效。
+	8、gpgcheck：一般都要开启，开启后安装时会验证rpm包是否是官方的，以保证系统安全。
+	9、gpgkey：默认系统安装后，在目录【/etc/pki/rpm-gpg】下都会存在数字证书。注：前面的【file://】表示文件协议，后面的【/etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-6】是数字证书的位置。
+	
+4.搭建光盘Yum源:第一步挂载光驱，第二步使网络yum源失效
+    1、将CentOS-Base.repo改名可以使网络Yum源失效，mv CentOS-Base.repo CentOS-Base.repo.bak。
+	2、让光盘Yum源生效，修改CentOS-Media.repo,将baseurl的路径修改为光盘挂载点。注释掉其他的路径,把enabled=0改为1。
+	3、使用yum list来查看yum源里面有哪些软件包可以安装。
+	
+5.源码包的安装:
+  1.安装准备:
+  
+  安装C语言编译器: yum -y install gcc
+  下载源码包
+  e.g:
+  http://mirror.bit.edu.cn/apache/httpd
+
+  2.安装注意事项:
+
+  源代码保存位置 /usr/local/src/
+
+  软件安装位置 /usr/local/
+
+  如何确定安装过程报错：
+  安装过程停止
+  并出现error warning or  no tip
+
+  3.源码包安装过程:
+
+  下载源码包
+  解压缩下载的源码包
+  进入解压缩目录
+  
+  ./configure 软件配置与检查
+	  －定义需要的功能选项
+	  －监测系统环境是否符合安装要求
+	  －把定义好的功能选项和监测系统环境的信息都写入Makefile文件，用于后续的编译安装
+
+  make编译
+    make clean 安装出错(清除安装时产生的缓存和临时文件)  执行这条命令
+
+    make install 编译安装  这步出错 则执行make clean 删除/usr/local源文件
+   
+		 
+		 
+
+		 
+		 
+		 
+		 
+		 
+		 
+		 
+		 
