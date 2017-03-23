@@ -1,0 +1,110 @@
+一、Linux服务管理
+
+1.分类简介
+  1.1 系统运行级别命令：
+      runlevel       #查看运行级别命令
+	    N 3          #表示系统的上一个运行级别为null,当前运行级别为3
+	  init 运行级别     #修改运行级别命令
+	    init 5          #表示进入运行级别5的图形界面
+	  vim /etc/inittab 
+	    id:3:initdefault:   #系统开机后直接进入哪个运行级别
+		
+  1.2 服务的分类：
+                                        独立的服务(大部分使用)
+	              RPM包默认安装的服务   
+	  Linux服务                         基于xinetd服务(了解即可，并不常用)
+	              源码包安装服务
+	  
+	  RPM包安装的服务:
+		  chkconfig --list     #centos6 查看服务自启动状态,可以看到所有RPM包安装的服务
+		  #systemctl list-unit-files     #centos7 查看systemd服务
+	  
+	  源码包安装的服务:
+	      查看服务安装的位置,一般是/usr/local/下
+		  
+  1.3 启动与自启动:
+      服务启动：就是在当前系统中让服务运行,并提供功能
+	  服务自启动：自启动是指让服务在系统开机或重启动之后,随着系统的启动而自动启动服务
+	  
+	  RPM包安装服务与源码包安装服务的区别就是安装位置不一样,所以两者的安装和管理方式都不一样
+	      源码包安装在指定位置,一般是/usr/local/
+		  RPM包安装在默认位置中
+		  
+  1.4 服务与端口:
+      vim /etc/services    #端口和服务的对应文件,查看罗列所有的端口号对应的服务信息
+	  netstat -tunlp     #查询系统中已经启动（开启）的服务
+	      -t 列出tcp数据
+		  -u 列出udp数据
+		  -l 列出正在监听的网络服务（不包含已经连接的服务）
+		  -n 用端口号来显示服务,而不是服务名
+		  -p 列出该服务的进程ID(PID)
+		  
+	  netstat -an    #查系统中已经启动的服务(包括正在连接的服务)
+	  
+2.RPM包安装的服务:(安装在默认位置)
+  
+  2.1 独立的服务(默认大概会安装在以下几个目录中):
+      /etc/init.d/    #启动脚本位置
+	  /etc/sysconfig/    #初始化环境配置文件位置
+	  /etc/    #配置文件位置
+	  /etc/xinetd.conf   #xinetd配置文件
+	  /etc/xinetd.d/     #基于xinetd服务的启动脚本
+	  /var/lib/   #服务产生的数据放在这里
+	  /var/log/   #日志存放位置
+	  
+	  Linux中的所有执行命令都是通过标准绝对路径执行的    执行时不加绝对路径是因为已经把绝对路径添加到了PATH环境变量中
+	  
+  2.2 RPM包安装的两种启动服务的方法：
+      /etc/init.d/独立服务名  start|stop|status|restart|
+	  
+	  service 独立服务名  start|stop|status|restart|
+      
+	  (通过RPM包安装的服务一般都会在服务后面加一个d,如:httpd服务)
+	  
+  2.3 独立服务的自启动方法:
+      chkconfig --list   #查看服务自启动状态
+      chkconfig [--level(运行级别)] 2345 [独立服务名] [on|off]
+	  
+	  修改/etc/rc.d/rc.local文件,如：
+	     touch /var/lock/subsys/local 
+		 /etc/init.d/httpd start
+	  
+	  使用ntsysv命令管理自启动
+	  
+	  
+3.源码包安装的服务：
+  3.1 源码包服务的自启动：
+      vim /etc/rc.d/rc.local
+	     加入   /usr/local/apache2/bin/apachectl start
+		 
+  3.2 让源码包服务被服务管理命令识别
+      如：让源码包的apache服务能被service命令管理启动:
+	      ln -s /usr/local/apache2/bin/apachectl  /etc/init.d/apache
+		  
+  3.3 让源码包的apache服务能被chkconfig与ntsysv命令管理自启动:
+      vim /etc/init.d/apache   添加如下内容:
+	     # chkconfig: 35 86 76
+		 ## 指定httpd脚本可以被chkconfig命令管理。格式是:chkconfig: 运行级别 启动顺序 关闭顺序   //(启动与关闭顺序不能与原有的冲突)
+		 # description:source package apache   ## 说明,内容随意但必须有
+	  chkconfig --add apache   #把源码包apache加入chkconfig命令	 
+		 
+     
+	  
+	  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
