@@ -1,0 +1,56 @@
+一、Windows rabbitMQ 安装配置命令（需配置环境变量）
+
+1.安装Erlang
+官网下载:http://www.erlang.org/downloads
+otp_win64_18.1
+全部点击“下一步”就行。
+有的选择其他的安装方式，可能需要添加一下系统环境变量（正常安装的也要检查下）：
+有最好，没有的话就手动添加嘛。
+
+2.安装RabbitMQ
+官网下载:http://www.rabbitmq.com/download.html
+rabbitmq-server-3.6.5
+依旧可以不改变默认进行安装。
+需要注意：默认安装的RabbitMQ 监听端口是5672
+
+特别注意win7下配置环境变量
+设置环境变量ERLANG_HOME= C:\ProgramFiles\erlx.x.x 
+添加到PATH  %ERLANG_HOME%\bin;
+
+设置环境变量RABBITMQ_SERVER=C:\ProgramFiles\rabbitmq_server-x.x.x。
+添加到PATH %RABBITMQ_SERVER%\sbin;
+
+监控配置
+
+在cmd下（以管理员方式运行）：进入sbin目录，运行rabbitmq-server start
+
+rabbitmq-plugins.bat enable rabbitmq_management  
+
+安装完成之后以管理员身份启动
+
+rabbitmq-service.bat stop  
+
+rabbitmq-service.bat install  
+
+rabbitmq-service.bat start  
+
+浏览器访问localhost:15672  默认账号：guest  密码：guest
+
+
+二、windows下安装rabbitmq的php扩展
+在windows下安装rabbitmq的php扩展，首先要通过phpinfo()函数查看php版本，php模块是32位的x86，还是64位的x64，以及是否为线程安全的；
+然后，下载php扩展对应的dll文件，分别配置php.ini文件和httpd-conf文件；最后，通过phpinfo()函数查看rabbitmq的php扩展是否已安装成功。
+1.下载php扩展对应的dll文件
+查看和下载所有版本php扩展的url为http://pecl.php.net/package/amqp，可以根据自己php版本等信息进行选择
+
+2. 配置php.ini文件和httpd-conf文件
+复制php_amqp.dll到php/ext， 如针对我的实际情况，放置到 D:\phpStudy\php\php-5.6.27-nts\ext目录下，同时在php.ini中添加如下代码
+[amqp]  
+extension=php_amqp.dll
+
+复制rabbitmq.1.dll到php目录，如针对我的实际情况，放置到D:\phpStudy\php\php-5.6.27-nts目录下，同时修改apache配置文件httpd.conf，添加如下代码
+# rabbitmq  
+LoadFile  "D:/phpStudy/php/php-5.6.27-nts/rabbitmq.1.dll"
+
+3.重启apache，查看php的amqp扩展是否已加载
+只要看到amqp模块的说明，就说明加载成功了
