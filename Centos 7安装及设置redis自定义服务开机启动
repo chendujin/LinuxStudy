@@ -1,0 +1,96 @@
+一、Centos 7安装及设置redis自定义服务开机启动
+
+1.redis 下载 https://redis.io/download
+wget http://download.redis.io/releases/redis-3.2.6.tar.gz
+
+2.解压缩
+tar xzf redis-3.2.6.tar.gz
+
+进入解压后的文件目录
+cd redis-3.2.6
+
+3.redis安装相对简单 直接编译即可
+make
+
+创建存储redis文件目录
+mkdir -p /usr/local/redis
+
+4.复制redis-server redis-cli到新建立的文件夹
+cp ./redis-server /usr/local/redis/
+cp ./redis-cli /usr/local/redis/
+
+复制redis的配置文件
+cd ..
+cp redis.conf /usr/local/redis/
+
+5.编辑配置文件
+cd /usr/local/redis/
+vim redis.conf
+
+6.改为yes 后台运行 
+daemonize yes
+
+7.添加开机启动服务
+vim /etc/systemd/system/redis-server.service
+
+粘贴一下内容
+[Unit]
+Description=The redis-server Process Manager
+After=syslog.target network.target
+
+[Service]
+Type=simple
+PIDFile=/var/run/redis.pid
+ExecStart=/usr/local/redis/redis-server       
+ExecReload=/bin/kill -USR2 $MAINPID
+ExecStop=/bin/kill -SIGINT $MAINPID
+
+[Install]
+WantedBy=multi-user.target
+
+8.设置开机启动
+systemctl daemon-reload 
+systemctl start redis-server.service 
+systemctl enable redis-server.service
+
+检查是否安装成功
+ps -A|grep redis
+9.创建redis命令软连接
+ln -s /usr/local/redis/redis-cli /usr/bin/redis
+
+测试redis
+redis
+
+安装完成
+
+
+二、Linux配置php的Redis扩展
+1、安装编译工具
+yum install -y wget  make gcc gcc-c++ zlib-devel openssl openssl-devel pcre-devel kernel keyutils  patch perl
+
+2、phpredis下载地址
+https://github.com/phpredis/phpredis
+wget https://github.com/nicolasff/phpredis/archive/2.2.7.tar.gz
+tar zxvf phpredis-2.2.7.tar.gz
+
+3、用phpize生成configure配置文件
+cd  phpredis-2.2.7 #进入安装目录
+/usr/local/php/bin/phpize
+
+./configure --with-php-config=/usr/local/php/bin/php-config  #配置
+make && make install
+
+4、安装完成之后，出现下面的安装路径
+/usr/local/php/lib/php/extensions/no-debug-non-zts-20090626/
+
+5、配置php支持
+vim /usr/local/php/etc/php.ini  #编辑配置文件，在最后一行添加以下内容
+添加
+extension="redis.so"
+:wq! #保存退出
+
+6、重启服务
+lnmp restart
+
+查找命令
+whereis phpize
