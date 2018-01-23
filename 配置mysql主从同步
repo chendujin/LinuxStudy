@@ -1,0 +1,146 @@
+准备两台服务器：
+主：192.168.8.10
+备：192.168.8.11
+
+一、配置主库：
+
+1）、授权给从数据库服务器
+
+mysql>GRANT REPLICATION SLAVE ON *.* to 'slave'@'192.168.8.11' identified by '111111';
+mysql>FLUSH PRIVILEGES;
+
+2）、修改主库配置文件，开启binlog，并设置server-id，每次修改配置文件后都要重启mysql服务才会生效
+
+vim /etc/my.cnf
+
+在该配置文件[mysqld]下面添加下面内容：
+
+[mysqld]
+log-bin=/var/lib/mysql/binlog
+server-id=1
+binlog-do-db = cmdb
+
+datadir=/var/lib/mysql
+socket=/var/lib/mysql/mysql.sock
+......
+
+server-id：master端的ID号；
+log-bin：同步的日志路径及文件名，一定注意这个目录要是mysql有权限写入的（我这里是偷懒了，直接放在了下面那个datadir下面）；
+binlog-do-db：要同步的数据库名
+还可以显示 设置不同步的数据库：
+binlog-ignore-db = mysql 不同步mysql库和test库
+binlog-ignore-db = test
+
+修改配置文件后，重启服务：service mysqld restart
+如果启动失败，通过cat /var/log/mysqld.log | tail -30  查看mysql启动失败的日志，从日志内容寻找解决方案。
+
+3）、查看主服务器当前二进制日志名和偏移量，这个操作的目的是为了在从数据库启动后，从这个点开始进行数据的恢复
+mysql> show master status;
++---------------+----------+--------------+------------------+
+| File          | Position | Binlog_Do_DB | Binlog_Ignore_DB |
++---------------+----------+--------------+------------------+
+| binlog.000001 |     1304 | cmdb         |                  |
++---------------+----------+--------------+------------------+
+row in set (0.00 sec)
+注：执行完这个步骤后不要再操作主数据库了，防止主数据库状态值变化
+主服务器已配置好
+
+二、配置从库：
+1）、修改从库配置文件
+vim /etc/my.cnf
+[mysqld]
+# 从数据库端ID号 
+server-id=2
+
+2）、执行同步命令：
+# 执行同步命令，设置主数据库ip，同步帐号密码，同步位置  
+mysql>change master to master_host='192.168.1.10',master_user='slave',master_password='111111',master_log_file='mysql-bin.000001',master_log_pos=1304;  
+
+3）、开启同步功能:
+mysql>start slave;
+
+4）、查看slave的状态，如果下面两项值为YES，则表示配置正确：
+mysql> show slave status\G
+Query OK, 0 rows affected, 1 warning (0.00 sec)
+
+Slave_IO_Running: Yes
+Slave_SQL_Running: Yes
+从库正在等待主库更新数据。。。Waitin for master to send event...
+
+注：Slave_IO_Running及Slave_SQL_Running进程必须正常运行，即YES状态，否则说明同步失败。可用这两项判断从服务器是否挂掉
+
+三、同步主库已有数据到从库
+
+主库操作：
+
+1、停止主库的数据更新操作
+
+mysql>flush tables with read lock;
+
+2、新开终端，生成主数据库的备份（导出数据库）
+
+[root@zhoujietest ~]# mysqldump -uroot -ptest123 cmdb > cmdb.sql
+
+3、将备份文件传到从库
+
+[root@zhoujietest ~]# scp cmdb.sql root@192.168.8.11:/root/
+
+4、主库解锁
+
+mysql>unlock tables;
+
+ 
+
+从库操作：
+
+1、停止从库slave
+
+mysql>slave stop;
+
+2、新建数据库cmdb
+
+mysql> create database cmdb default charset utf8;
+
+3、导入数据
+
+[root@ops-dev ~]# mysql -uroot -ptest123 cmdb<cmdb.sql 
+
+4、查看从库已有该数据库和数据 
+复制代码
+
+mysql> show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| cmdb               |
+| mysql              |
+| performance_schema |
+| test               |
++--------------------+
+
+此时主从库的数据完全一致，如果对主库进行增删改操作，从库会自动同步进行操作。
+
+四、判断主从服务器是否正常运行代码：
+
+    //在从服务器中执行以下语句
+    $sql = "show slave status";
+    $result = mysql_query($sql, $slave_link);
+    $row = mysql_fetch_assoc($result);
+
+    $Slave_IO_Running = $row['Slave_IO_Running'];
+    $Slave_SQL_Running = $row['Slave_SQL_Running'];
+
+    //下面两项为判断标准
+    if ('Yes' == $Slave_IO_Running && 'Yes' == $Slave_SQL_Running) {
+
+    } else {
+        $content .= "从数据库( $host )挂掉了！！！ <br/>";
+    }
+
+
+
+
+
+
+
