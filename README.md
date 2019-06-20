@@ -6,7 +6,7 @@
 ## 系统架构
 >Rabbitmq系统最核心的组件是Exchange和Queue，下图是系统简单的示意图。Exchange和Queue是在rabbitmq server（又叫做broker）端，producer和consumer在应用端。
 
-![f06163c1dd3cf2dd4f05e654b2010428.png](en-resource://database/1104:1)@w=1000h=400
+
 
 ### producer&Consumer
 >producer指的是消息生产者，consumer消息的消费者。
